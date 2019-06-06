@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# kasutajanimi
+kasutajanimi=$1 # ./db_lisa kasutajanimi
+# parool
+parool=$(pwgen 6)
+dbnimi=$kasutajanimi
+# kontroll
+echo $kasutajanimi
+echo $parool
+echo $dbnimi
+
+
+#mysql
+kask1="CREATE DATABASE IF NOT EXISTS $dbnimi;"
+kask2="GRANT USAGE ON *.* TO $kasutajanimi@localhost IDENTIFIED BY '$parool';"
+kask3="GRANT ALL PRIVILEGES ON $dbnimi.* TO $kasutajanimi@localhost;"
+kask4="FLUSH PRIVILEGES;"
+sql="${kask1}${kask2}${kask3}${kask4}"
+# sql kontroll
+echo $sql
+mysql -e "$sql" 2>> /var/log/db_lisa.error.log
+# kui on koik korras
+if [ $? -eq 0 ]; then
+	touch /home/$kasutajanimi/.my.cnf
+	echo "[client]" > /home/$kasutajanimi/.my.cnf
+	echo "user=$kasutajanimi" >> /home/$kasutajanimi/.my.cnf
+	echo "password=$parool" >> /home/$kasutajanimi/.my.cnf
+	echo $kasutajanimi:$kasutajanimi /home/$kasutajanimi/.my.cnf
+	chmod 400 /home/$kasutajanimi/.my.cnf
+fi
